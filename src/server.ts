@@ -32,6 +32,8 @@ app.patch("/v1/payment-account/:id", (request: Request, response: Response) => {
 });
 
 // Mag
+const leadTypeArray = ['with_schedule', 'manual_lead', 'received_lead'];
+const distributionTypeArray = ['none', 'simple', 'broker_score', 'novice'];
 const statusArray = [
   'queue',
   'available',
@@ -41,87 +43,82 @@ const statusArray = [
   'consulting',
   'dormant',
   'done'
-]
+];
+const clusterArray = [
+  'diabetes',
+  'hypertension',
+  'cardiovascular_disease',
+  'hiv',
+  'prostate_cancer',
+  'breast_cancer',
+  'skin_cancer',
+  'obesity'
+];
 
-app.get("/v0/users/2/leads", (_, response: Response) => {
+app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
   faker.locale = 'pt_BR';
   const itemsAmount = 15;
 
-  const data = Array(itemsAmount).fill(0).map(() => ({
-    id: faker.datatype.uuid(),
-    customer: {
-      name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-      phone: faker.phone.phoneNumber('###########')
-    },
-    workStatus: faker.random.arrayElement(['to_do', 'working', 'done']),
-    campaignId: faker.datatype.number({ min: 1, max: 10 }),
-    status: faker.random.arrayElement(statusArray),
-    type: faker.random.arrayElement([
-      'with_schedule',
-      'manual_lead',
-      'received_lead'
-    ]),
-    cluster: faker.random.arrayElement([
-      'diabetes',
-      'hypertension',
-      'cardiovascular_disease',
-      'hiv',
-      'prostate_cancer',
-      'breast_cancer',
-      'skin_cancer',
-      'obesity'
-    ]),
-    registeredAt: faker.date.past(undefined, new Date()),
-    expiresAt: faker.date.future(undefined, new Date())
-  }));
+  const { id: userId } = request.params;
 
-  return response.send({
-    data,
-    totalAmount: 15,
-    currentPage: 1,
-    pagesAmount: 1,
-  });
-});
+  let data: any[] = [];
 
-app.get("/v0/users/1/leads", (_, response: Response) => {
-  faker.locale = 'pt_BR';
-  const itemsAmount = 15;
+  const isUserProducer = userId === '1';
+  const isUserLeader = userId === '2';
+  const isValidUser = isUserProducer || isUserLeader;
 
-  const data = Array(itemsAmount).fill(0).map(() => {
-    const firstName = faker.name.firstName();
-    const lastName = faker.name.lastName();
-    const openedAt = faker.date.past(undefined, new Date()); 
+  if (isValidUser) {
+    data = Array(itemsAmount).fill(0).map(() => {
+      const firstName = faker.name.firstName();
+      const lastName = faker.name.lastName();
+      const openedAt = faker.date.past(undefined, new Date()); 
 
-    return {
-      id: faker.datatype.uuid(),
-      customer: {
-        name: `${firstName} ${lastName}`,
-        email: faker.internet.email(firstName, lastName),
-        phone: faker.phone.phoneNumber('###########')
-      },
-      isVerified: faker.datatype.boolean(),
-      onHold: faker.datatype.boolean(),
-      producer: {
+      let lead: any = {
         id: faker.datatype.uuid(),
-        name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-      },
-      campaignId: faker.datatype.uuid(),
-      managerId: faker.datatype.uuid(),
-      status: faker.random.arrayElement(statusArray),
-      distributionType: faker.random.arrayElement([
-        'none', 'simple', 'broker_score', 'novice'
-      ]),
-      registeredAt: faker.date.past(undefined, openedAt),
-      openedAt: openedAt,
-      expirateAt: faker.date.future(undefined, new Date())
-    };
-  });
+        customer: {
+          name: `${firstName} ${lastName}`,
+          phone: faker.phone.phoneNumber('###########')
+        },
+        campaignId: faker.datatype.number({ min: 1, max: 10 }),
+        status: faker.random.arrayElement(statusArray),
+        registeredAt: faker.date.past(undefined, openedAt),
+        expiresAt: faker.date.future(undefined, new Date())
+      };
+
+      if (isUserProducer) {
+        lead = {
+          ...lead,
+          type: faker.random.arrayElement(leadTypeArray),
+          cluster: faker.random.arrayElement(clusterArray)
+        };
+      } else {
+        lead = {
+          ...lead,
+          customer: {
+            ...lead.customer,
+            email: faker.internet.email(firstName, lastName)
+          },
+          isVerified: faker.datatype.boolean(),
+          onHold: faker.datatype.boolean(),
+          producer: {
+            id: faker.datatype.uuid(),
+            name: `${faker.name.firstName()} ${faker.name.lastName()}`,
+          },
+          managerId: faker.datatype.uuid(),
+          distributionType: faker.random.arrayElement(distributionTypeArray),
+          openedAt
+        };
+      }
+
+      return lead;
+    });
+  }
 
   return response.send({
-    data,
-    totalAmount: 15,
-    currentPage: 1,
-    pagesAmount: 1,
+    data: data,
+    amount: data.length,
+    amountPerPage: itemsAmount,
+    page: 1,
   });
 });
 
