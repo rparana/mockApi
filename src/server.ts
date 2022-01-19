@@ -68,10 +68,12 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
   const isValidUser = isUserProducer || isUserLeader;
 
   if (isValidUser) {
-    data = Array(itemsAmount).fill(0).map(() => {
+    data = faker.datatype.array(itemsAmount).map(() => {
       const firstName = faker.name.firstName();
       const lastName = faker.name.lastName();
-      const openedAt = faker.date.past(undefined, new Date()); 
+      const registeredAt = faker.date.past();
+      const expiresAt = faker.date.future();
+      const openedAt = faker.date.between(registeredAt, expiresAt); 
 
       let lead: any = {
         id: faker.datatype.uuid(),
@@ -81,8 +83,8 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
         },
         campaignId: faker.datatype.number({ min: 1, max: 10 }),
         status: faker.random.arrayElement(statusArray),
-        registeredAt: faker.date.past(undefined, openedAt),
-        expiresAt: faker.date.future(undefined, new Date())
+        registeredAt,
+        expiresAt
       };
 
       if (isUserProducer) {
@@ -106,7 +108,7 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
           },
           managerId: faker.datatype.uuid(),
           distributionType: faker.random.arrayElement(distributionTypeArray),
-          openedAt
+          openedAt: faker.random.arrayElement([openedAt, null])
         };
       }
 
