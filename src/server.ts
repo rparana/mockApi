@@ -71,8 +71,8 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
     data = faker.datatype.array(itemsAmount).map(() => {
       const firstName = faker.name.firstName();
       const lastName = faker.name.lastName();
-      const registeredAt = faker.date.past(undefined, new Date());
-      const expiresAt = faker.date.future(undefined, new Date());
+      const registeredAt = faker.date.past();
+      const expiresAt = faker.date.future();
       const openedAt = faker.date.between(registeredAt, expiresAt); 
 
       let lead: any = {
