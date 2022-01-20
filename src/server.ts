@@ -54,10 +54,31 @@ const clusterArray = [
   'skin_cancer',
   'obesity'
 ];
+const campaigns = [
+  { id: '1', description: 'MagLeads' },
+  { id: '2', description: 'Glic' },
+  { id: '3', description: 'SQUID' },
+  { id: '4', description: 'ABEP' },
+  { id: '5', description: 'Unicred' },
+];
+const producers = [
+  { id: '1', name: 'Fernando Marinho' },
+  { id: '2', name: 'Marcela Teixeira' },
+  { id: '3', name: 'Alessandro Aparecido' },
+  { id: '4', name: 'Bianca Glaciano' },
+  { id: '5', name: 'João Gabriel' },
+];
+const managers = [
+  { id: '1', name: 'João Gonçalves' },
+  { id: '2', name: 'Priscila de Almeida' },
+  { id: '3', name: 'Junior Rodrigues de Souza' },
+  { id: '4', name: 'Fernando da Costa' },
+  { id: '5', name: 'Marcos Vinícius' },
+];
 
 app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
   faker.locale = 'pt_BR';
-  const itemsAmount = 15;
+  const itemsAmount = 10;
 
   const { id: userId } = request.params;
 
@@ -81,7 +102,7 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
           name: `${firstName} ${lastName}`,
           phone: faker.phone.phoneNumber('###########')
         },
-        campaignId: faker.datatype.number({ min: 1, max: 10 }),
+        campaignId: faker.random.arrayElement(campaigns).id,
         status: faker.random.arrayElement(statusArray),
         registeredAt,
         expiresAt
@@ -102,11 +123,8 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
           },
           isVerified: faker.datatype.boolean(),
           onHold: faker.datatype.boolean(),
-          producer: {
-            id: faker.datatype.uuid(),
-            name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-          },
-          managerId: faker.datatype.uuid(),
+          producer: faker.random.arrayElement(producers),
+          managerId: faker.random.arrayElement(managers).id,
           distributionType: faker.random.arrayElement(distributionTypeArray),
           openedAt: faker.random.arrayElement([openedAt, null])
         };
@@ -119,7 +137,58 @@ app.get("/v1/users/:id/leads", (request: Request, response: Response) => {
   return response.send({
     data: data,
     amount: data.length,
-    amountPerPage: itemsAmount,
+    amountPerPage: 10,
+    page: 1,
+  });
+});
+
+app.get("/v1/users/:id/teams/campaigns", (request: Request, response: Response) => {
+  const { id: userId } = request.params;
+
+  const isUserProducer = userId === '1';
+  const isUserLeader = userId === '2';
+  const isValidUser = isUserProducer || isUserLeader;
+
+  const data = isValidUser ? campaigns : [];
+
+  return response.send({
+    data,
+    amount: data.length,
+    amountPerPage: 10,
+    page: 1,
+  });
+});
+
+app.get("/v1/users/:id/producers", (request: Request, response: Response) => {
+  const { id: userId } = request.params;
+
+  const isUserProducer = userId === '1';
+  const isUserLeader = userId === '2';
+  const isValidUser = isUserProducer || isUserLeader;
+
+  const data = isValidUser ? producers : [];
+
+  return response.send({
+    data,
+    amount: data.length,
+    amountPerPage: 10,
+    page: 1,
+  });
+});
+
+app.get("/v1/users/:id/teams/leaders", (request: Request, response: Response) => {
+  const { id: userId } = request.params;
+
+  const isUserProducer = userId === '1';
+  const isUserLeader = userId === '2';
+  const isValidUser = isUserProducer || isUserLeader;
+
+  const data = isValidUser ? managers : [];
+
+  return response.send({
+    data,
+    amount: data.length,
+    amountPerPage: 10,
     page: 1,
   });
 });
